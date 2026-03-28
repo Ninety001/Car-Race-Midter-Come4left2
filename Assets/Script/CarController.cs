@@ -7,6 +7,10 @@ public class CarController : MonoBehaviour
     // Car Attibutes
     [Header("Movement Settings")]
     public float forwardSpeed = 15f;
+    public float boostSpeed = 30f;
+    public float accelerationRate = 3f;
+    private float currentForwardSpeed;
+
     public float sideSpeed = 10f;
     public float maxBoundaryX = 9f;
 
@@ -22,12 +26,16 @@ public class CarController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         rb.angularDamping = 0f;
+
+        // Start Speed
+        currentForwardSpeed = forwardSpeed;
     }
 
     void Update()
     {
         // CarMovement
         horizontalInput = 0f;
+        bool isBoosting = false;
 
         if (Keyboard.current != null)
         {
@@ -35,9 +43,19 @@ public class CarController : MonoBehaviour
                 horizontalInput = -1f;
             else if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed)
                 horizontalInput = 1f;
+
+            if (Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed)
+            {
+                isBoosting = true;
+            }
         }
 
-        Vector3 moveDirection = new Vector3(horizontalInput * sideSpeed, 0, forwardSpeed);
+        float targetSpeed = isBoosting ? boostSpeed : forwardSpeed;
+
+        // Accelation increase speed to max!
+        currentForwardSpeed = Mathf.Lerp(currentForwardSpeed, targetSpeed, Time.deltaTime * accelerationRate);
+
+        Vector3 moveDirection = new Vector3(horizontalInput * sideSpeed, 0, currentForwardSpeed);
         transform.Translate(moveDirection * Time.deltaTime, Space.World);
 
         Vector3 currentPos = transform.position;
