@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(Rigidbody))]
 public class CarController : MonoBehaviour
@@ -79,4 +80,12 @@ public class CarController : MonoBehaviour
         float dampingTorque = -angularVelZ * dampingForce;
         rb.AddTorque(Vector3.forward * dampingTorque);
     }
-}
+
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Obstacle"))
+        {   
+            SceneManager.LoadScene("GameOver");
+        }
+    }
+} 
