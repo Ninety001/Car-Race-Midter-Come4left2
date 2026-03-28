@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Collections;
 using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(Rigidbody))]
@@ -22,6 +23,11 @@ public class CarController : MonoBehaviour
 
     private Rigidbody rb;
     private float horizontalInput;
+
+    [Header("Item Boost Settings")]
+    public float itemBoostPower = 150f;     
+    public float boostDuration = 5f;       
+    private bool isItemBoosting = false;   
 
     void Start()
     {
@@ -52,6 +58,10 @@ public class CarController : MonoBehaviour
         }
 
         float targetSpeed = isBoosting ? boostSpeed : forwardSpeed;
+
+        if (isItemBoosting) targetSpeed = itemBoostPower;
+
+        currentForwardSpeed = Mathf.Lerp(currentForwardSpeed, targetSpeed, Time.deltaTime * accelerationRate);
 
         // Accelation increase speed to max!
         currentForwardSpeed = Mathf.Lerp(currentForwardSpeed, targetSpeed, Time.deltaTime * accelerationRate);
@@ -84,8 +94,29 @@ public class CarController : MonoBehaviour
     void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Obstacle"))
-        {   
+        {
+            forwardSpeed = 0f;
+            boostSpeed = 0f;
+            itemBoostPower = 0f;
+            this.enabled = false;
             SceneManager.LoadScene("GameOver");
+        }
+
+        if (other.CompareTag("BoostItem"))
+        {
+            StartCoroutine(ActivateItemBoost()); 
+            Destroy(other.gameObject);
+        }
+
+        IEnumerator ActivateItemBoost()
+        {
+            isItemBoosting = true; // เริ่มเร็ว!
+            Debug.Log("เก็บไอเทม! ซิ่งงงง");
+
+            yield return new WaitForSeconds(boostDuration); // รอ 5 วินาที
+
+            isItemBoosting = false; // หมดเวลาความเร็วจะค่อยๆ ลดกลับมาปกติ (เพราะใช้ Lerp ใน Update)
+            Debug.Log("หมดเวลา Boost");
         }
     }
 } 
