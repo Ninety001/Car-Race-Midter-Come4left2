@@ -1,32 +1,64 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[RequireComponent(typeof(Rigidbody))]
 public class CarController : MonoBehaviour
 {
-    public float speed = 15f;
-    public float turnSpeed = 50f;
+    // Car Attibutes
+    [Header("Movement Settings")]
+    public float forwardSpeed = 15f;
+    public float sideSpeed = 10f;
+    public float maxBoundaryX = 9f;
+
+    [Header("Physics Leaning (Torque)")]
+    public float leanTorqueForce = 50f;     
+    public float restoreSpringForce = 10f;  
+    public float dampingForce = 5f;         
+
+    private Rigidbody rb;
+    private float horizontalInput;
+
+    void Start()
+    {
+        rb = GetComponent<Rigidbody>();
+        rb.angularDamping = 0f;
+    }
 
     void Update()
     {
-        float verticalInput = 0f;
-        float horizontalInput = 0f;
+        // CarMovement
+        horizontalInput = 0f;
 
-        // ตรวจสอบว่ามีคีย์บอร์ดเชื่อมต่ออยู่หรือไม่
         if (Keyboard.current != null)
         {
-            // เช็คการกดปุ่มเดินหน้า-ถอยหลัง (W/S หรือ ลูกศรขึ้น/ลง)
-            if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) verticalInput = 1f;
-            else if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) verticalInput = -1f;
-
-            // เช็คการกดปุ่มเลี้ยวซ้าย-ขวา (A/D หรือ ลูกศรซ้าย/ขวา)
-            if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) horizontalInput = -1f;
-            else if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) horizontalInput = 1f;
+            if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed)
+                horizontalInput = -1f;
+            else if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed)
+                horizontalInput = 1f;
         }
 
-        // เคลื่อนที่ไปข้างหน้าและหลัง
-        transform.Translate(Vector3.forward * Time.deltaTime * speed * verticalInput);
+        Vector3 moveDirection = new Vector3(horizontalInput * sideSpeed, 0, forwardSpeed);
+        transform.Translate(moveDirection * Time.deltaTime, Space.World);
 
-        // หมุนเลี้ยวซ้ายขวา
-        transform.Rotate(Vector3.up, Time.deltaTime * turnSpeed * horizontalInput);
+        Vector3 currentPos = transform.position;
+        currentPos.x = Mathf.Clamp(currentPos.x, -maxBoundaryX, maxBoundaryX);
+        transform.position = currentPos;
+    }
+
+    void FixedUpdate()
+    {
+        // CarPhysic
+        float appliedTorque = -horizontalInput * leanTorqueForce;
+        rb.AddTorque(Vector3.forward * appliedTorque);
+
+        float currentAngleZ = rb.rotation.eulerAngles.z;
+        if (currentAngleZ > 180f) currentAngleZ -= 360f; 
+
+        float restoreTorque = -currentAngleZ * restoreSpringForce;
+        rb.AddTorque(Vector3.forward * restoreTorque);
+
+        float angularVelZ = rb.angularVelocity.z;
+        float dampingTorque = -angularVelZ * dampingForce;
+        rb.AddTorque(Vector3.forward * dampingTorque);
     }
 }
