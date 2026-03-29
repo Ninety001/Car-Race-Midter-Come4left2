@@ -102,6 +102,13 @@ public class CarController : MonoBehaviour
             SceneManager.LoadScene("GameOver");
         }
 
+        if (other.CompareTag("Goal"))
+        {
+            Debug.Log("You Win!");
+            SceneManager.LoadScene("WinScene");
+        }
+
+
         if (other.CompareTag("BoostItem"))
         {
             StartCoroutine(ActivateItemBoost()); 

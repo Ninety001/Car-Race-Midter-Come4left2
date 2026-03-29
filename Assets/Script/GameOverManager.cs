@@ -8,4 +8,14 @@ public class GameOverManager : MonoBehaviour
         SceneManager.LoadScene("SampleScene");
     }
 
+    public void MainMenu()
+    {
+        SceneManager.LoadScene("MainMenu");
+    }    
+
+    public void Credit()
+    {
+        SceneManager.LoadScene("Credit");
+    }
+
 }
